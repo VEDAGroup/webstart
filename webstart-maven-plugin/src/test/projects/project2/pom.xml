@@ -18,7 +18,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
+        <groupId>net.veda</groupId>
         <artifactId>webstart-maven-plugin</artifactId>
         <executions>
           <execution>

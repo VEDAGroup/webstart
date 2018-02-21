@@ -19,7 +19,7 @@
     <dependencies>
 
       <dependency>
-        <groupId>org.codehaus.mojo</groupId>
+        <groupId>net.veda</groupId>
         <artifactId>webstart-jnlp-servlet</artifactId>
         <version>@project.version@</version>
         <scope>runtime</scope>
@@ -56,7 +56,7 @@ just added to check that dependencies are properly filtered out -->
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
+          <groupId>net.veda</groupId>
           <artifactId>webstart-maven-plugin</artifactId>
           <version>@project.version@</version>
         </plugin>

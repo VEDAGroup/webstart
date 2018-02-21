@@ -12,7 +12,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
+        <groupId>net.veda</groupId>
         <artifactId>webstart-maven-plugin</artifactId>
         <executions>
           <execution>
@@ -40,8 +40,8 @@
       <plugins>
 
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>webstart-maven-plugin</artifactId>
+          <groupId>net.veda</groupId>
+        <artifactId>webstart-maven-plugin</artifactId>
           <version>@project.version@</version>
           <configuration>
             <unsign>true</unsign>

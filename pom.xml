@@ -8,14 +8,16 @@
     <version>39</version>
   </parent>
 
-  <groupId>org.codehaus.mojo</groupId>
-  <artifactId>webstart</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <!-- HIER: VEDA -->
+  <groupId>net.veda</groupId>
+  <artifactId>webstart-mojo</artifactId>
+  <version>1.8.0-SNAPSHOT</version>   <!-- Version für java 8 (JDK 1.8) :-) -->
   <packaging>pom</packaging>
 
   <name>MWEBSTART :: Project</name>
   <description>Webstart Maven Plugin and related modules</description>
-  <url>http://mojohaus.org/webstart</url>
+  <url>https://github.com/VEDAGroup/webstart-maven-plugin</url>
+
   <inceptionYear>2005</inceptionYear>
   <licenses>
     <license>
@@ -25,56 +27,17 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <name>Jerome Lacoste</name>
-      <email>jerome@coffeebreaks.org</email>
-      <organization>CoffeeBreaks</organization>
-      <organizationUrl>http://www.coffeebreaks.org</organizationUrl>
-      <timezone>+1</timezone>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-    </developer>
-    <developer>
-      <name>Tony chemit</name>
-      <email>dev@tchemit.fr</email>
-      <timezone>Eurepose/Paris</timezone>
-      <roles>
-        <role>Java Developer</role>
-      </roles>
-    </developer>
-  </developers>
-  <contributors>
-    <contributor>
-      <name>David Boden</name>
-      <email>dave@daveboden.com</email>
-    </contributor>
-    <contributor>
-      <!--<id>ge0ffrey</id>-->
-      <name>Geoffrey De Smet</name>
-      <email>ge0ffrey.spam_AT_gmail.com</email>
-      <roles>
-        <role>Java developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </contributor>
-    <contributor>
-      <!--<id>ge0ffrey</id>-->
-      <name>Kevin Stembridge</name>
-      <!--email></email-->
-      <roles>
-        <role>Java developer</role>
-      </roles>
-      <!--timezone>+1</timezone-->
-    </contributor>
-    <contributor>
-      <name>Andreas Kuhtz</name>
-    </contributor>
-    <contributor>
-      <name>Peter Butkovic</name>
-    </contributor>
-  </contributors>
+  <distributionManagement>
+    <repository>
+      <id>veda-releases</id>
+      <url>http://repo.veda.de:8081/nexus/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>veda-snapshots</id>
+      <url>http://repo.veda.de:8081/nexus/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
 
   <prerequisites>
     <maven>${mavenVersion}</maven>
@@ -86,25 +49,12 @@
   </modules>
 
   <scm>
-    <connection>scm:git:https://github.com/mojohaus/webstart.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/mojohaus/webstart.git</developerConnection>
-    <url>https://github.com/mojohaus/webstart</url>
-    <tag>HEAD</tag>
+    <url>https://github.com/VEDAGroup/webstart.git</url>
+    <connection>scm:git:https://github.com/VEDAGroup/webstart.git</connection>
+
+    <!-- Das folgende führt zu einer enforcer Fehlermeldung, daher ignore it -->
+    <!-- <developerConnection>scm:git:https://github.com/VEDAGroup/webstart.git</developerConnection> -->
   </scm>
-  <issueManagement>
-    <system>github</system>
-    <url>https://github.com/mojohaus/webstart/issues</url>
-  </issueManagement>
-  <ciManagement>
-    <system>Travis CI</system>
-    <url>https://travis-ci.org/mojohaus/webstart</url>
-  </ciManagement>
-  <distributionManagement>
-    <site>
-      <id>github</id>
-      <url>scm:git:git@github.com:mojohaus/webstart.git</url>
-    </site>
-  </distributionManagement>
 
   <properties>
     <mavenVersion>2.0.11</mavenVersion>
@@ -115,6 +65,7 @@
 
     <!-- all modules shares the same version in our projects -->
     <autoVersionSubmodules>true</autoVersionSubmodules>
+
   </properties>
 
   <repositories>

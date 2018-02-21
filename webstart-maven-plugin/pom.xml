@@ -3,12 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>webstart</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <groupId>net.veda</groupId>
+    <artifactId>webstart-mojo</artifactId>
+    <version>1.8.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.codehaus.mojo</groupId>
   <artifactId>webstart-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
 
@@ -144,7 +143,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.codehaus.mojo</groupId>
+      <groupId>net.veda</groupId>
       <artifactId>webstart-jnlp-servlet</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -161,6 +160,19 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-embedder</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>l10n-maven-plugin</artifactId>
+      <version>1.0-alpha-2</version>
+      <type>pom</type>
+    </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>keytool-api-1.5</artifactId>
+      <version>1.5</version>
     </dependency>
 
   </dependencies>
@@ -346,7 +358,7 @@
             <version>1.0-alpha-2</version>
             <configuration>
               <locales>
-                <locale>fr</locale>
+                <locale>de</locale>
               </locales>
             </configuration>
           </plugin>

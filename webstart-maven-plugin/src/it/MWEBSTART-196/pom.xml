@@ -18,8 +18,8 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>webstart-maven-plugin</artifactId>
+          <groupId>net.veda</groupId>
+        <artifactId>webstart-maven-plugin</artifactId>
           <version>@project.version@</version>
           <configuration>
             <makeArchive>false</makeArchive>

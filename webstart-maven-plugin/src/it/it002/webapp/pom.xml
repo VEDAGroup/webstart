@@ -25,8 +25,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.codehaus.mojo</groupId>
+      <groupId>net.veda</groupId>
       <artifactId>webstart-jnlp-servlet</artifactId>
+      <version>1.8.0-SNAPSHOT</version>   <!-- UGA Anpassen -->
     </dependency>
 
     <dependency>
@@ -38,7 +39,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
+        <groupId>net.veda</groupId>
         <artifactId>webstart-maven-plugin</artifactId>
         <executions>
           <execution>
