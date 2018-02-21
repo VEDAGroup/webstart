@@ -290,7 +290,7 @@ public abstract class AbstractJnlpMojo
             // ---
             // Process collected jars
             // ---
-
+            modifyManifestFiles();
             signOrRenameJars();
 
             // ---
@@ -298,7 +298,7 @@ public abstract class AbstractJnlpMojo
             // ---
 
             generateJnlpFile( getWorkDirectory() );
-
+            includeJnlpToMainJar(this, new File(getWorkDirectory(), jnlp.getOutputFile()));
             // ---
             // Generate jnlp extension files
             // ---
@@ -340,6 +340,61 @@ public abstract class AbstractJnlpMojo
         {
             throw new MojoExecutionException( "Failure to run the plugin: ", e );
         }
+    }
+
+    // ----------------------------------------------------------------------
+    // Public methods
+    // ----------------------------------------------------------------------
+
+    public List getJnlpExtensions()
+    {
+        return jnlpExtensions;
+    }
+
+    public boolean hasJnlpExtensions()
+    {
+        return jnlpExtensions != null && !jnlpExtensions.isEmpty();
+    }
+
+    public List getPackagedJnlpArtifacts()
+    {
+        return packagedJnlpArtifacts;
+    }
+
+    public Map getExtensionsJnlpArtifacts()
+    {
+        return extensionsJnlpArtifacts;
+    }
+
+    public boolean isArtifactWithMainClass( Artifact artifact )
+    {
+        final boolean b = artifactWithMainClass.equals( artifact );
+        getLog().debug( "compare " + artifactWithMainClass + " with " + artifact + ": " + b );
+        return b;
+    }
+
+    /**
+     * Returns the flag that indicates whether or not a version attribute
+     * should be output in each jar resource element in the generated
+     * JNLP file. The default is false.
+     *
+     * @return Returns the value of the {@code outputJarVersions} property.
+     */
+    public boolean isOutputJarVersions()
+    {
+        return this.outputJarVersions;
+    }
+
+    /**
+     * Sets the flag that indicates whether or not a version attribute
+     * should be output in each jar resource element in the generated
+     * JNLP file. The default is false.
+     *
+     * @param outputJarVersions new value of the {@link #outputJarVersions} field
+     */
+    public void setOutputJarVersions( boolean outputJarVersions )
+    {
+        this.outputJarVersions = outputJarVersions;
     }
 
     // ----------------------------------------------------------------------
@@ -435,7 +490,7 @@ public abstract class AbstractJnlpMojo
 
     /**
      * @param pattern   pattern to test over artifacts
-     * @param artifacts collection of artifacts to check
+     * @param artifacts collection of artifact to check
      * @return true if filter matches no artifact, false otherwise *
      */
     private boolean ensurePatternMatchesAtLeastOneArtifact( String pattern, Collection<Artifact> artifacts )

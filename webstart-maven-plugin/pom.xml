@@ -42,6 +42,8 @@
     <!-- versions of javadoc tagglets -->
     <mavenPluginToolsJavadocVersion>2.5.1</mavenPluginToolsJavadocVersion>
     <plexusComponentJavadocVersion>1.3.0</plexusComponentJavadocVersion>
+
+    <truezip.version>7.7.4</truezip.version>
   </properties>
 
   <dependencies>
@@ -173,6 +175,18 @@
       <groupId>org.codehaus.mojo</groupId>
       <artifactId>keytool-api-1.5</artifactId>
       <version>1.5</version>
+    </dependency>
+
+    <!-- For Manifest modifications in JAR files-->
+    <dependency>
+      <groupId>de.schlichtherle.truezip</groupId>
+      <artifactId>truezip-file</artifactId>
+      <version>${truezip.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.schlichtherle.truezip</groupId>
+      <artifactId>truezip-driver-zip</artifactId>
+      <version>${truezip.version}</version>
     </dependency>
 
   </dependencies>
@@ -316,6 +330,10 @@
               <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
               <postBuildHookScript>validate.groovy</postBuildHookScript>
               <addTestClassPath>true</addTestClassPath>
+
+              <!-- UGA: skip extra tests -->
+              <skipInstallation>false</skipInstallation>
+              <skipInvocation>true</skipInvocation>
             </configuration>
             <executions>
               <execution>

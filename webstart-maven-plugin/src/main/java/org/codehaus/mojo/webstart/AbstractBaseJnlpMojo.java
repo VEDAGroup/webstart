@@ -19,8 +19,18 @@ package org.codehaus.mojo.webstart;
  * under the License.
  */
 
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -28,6 +38,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.mojo.webstart.dependency.filenaming.DependencyFilenameStrategy;
+import org.codehaus.mojo.webstart.jarmodification.*;
 import org.codehaus.mojo.webstart.pack200.Pack200Config;
 import org.codehaus.mojo.webstart.pack200.Pack200Tool;
 import org.codehaus.mojo.webstart.sign.SignConfig;
@@ -36,22 +47,6 @@ import org.codehaus.mojo.webstart.util.ArtifactUtil;
 import org.codehaus.mojo.webstart.util.IOUtil;
 import org.codehaus.mojo.webstart.util.JarUtil;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
-
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * The superclass for all JNLP generating MOJOs.
@@ -79,6 +74,7 @@ public abstract class AbstractBaseJnlpMojo
      * Suffix extension of a jar file.
      */
     public static final String JAR_SUFFIX = ".jar";
+    public static final String APPLICATION_NAME_ENTRY_HEADER = "Application-Name";
 
     // ----------------------------------------------------------------------
     // Mojo Parameters
@@ -241,6 +237,40 @@ public abstract class AbstractBaseJnlpMojo
     @Parameter( property = "jnlp.useUniqueVersions", defaultValue = "false" )
     private boolean useUniqueVersions;
 
+    /**
+     * Defines whether to modify the Manifest files of the jars
+     */
+    @Parameter(defaultValue = "true" )
+    private boolean modifyManifest;
+
+    /**
+     * Defines whether to auto generate the Manifest entry for the application name
+     * @parameter default-value="false";
+     */
+    @Parameter(defaultValue = "false" )
+    private boolean generateApplicationNameManifestEntry;
+
+    /**
+     * Entries to add to existing Manifest file.
+     * @parameter
+     */
+    private Map<String, String> manifestEntries;
+
+    /**
+     * Defines whether to include the generated JNLP file into the main jar.
+     * @parameter default-value="false";
+     */
+    @Parameter(defaultValue = "false" )
+    private boolean includeJnlpInMainJar;
+
+    /**
+     * Defines how the JNLP file should be included in the jar.
+     *
+     * @parameter default-value="APPLICATION"
+     */
+    @Parameter(defaultValue = "APPLICATION" )
+    private IncludeJnlpType includeJnlpType;
+
     // ----------------------------------------------------------------------
     // Components
     // ----------------------------------------------------------------------
@@ -301,6 +331,15 @@ public abstract class AbstractBaseJnlpMojo
      */
     @Component( hint = "mng-4384" )
     private SecDispatcher securityDispatcher;
+
+    /**
+     * Jar / Manifest tool.
+     *
+     * @component role="org.codehaus.mojo.webstart.jarmodification.JarTool"
+     * @required
+     * @readonly
+     */
+    private JarTool jarTool = new DefaultJarTool();
 
     // ----------------------------------------------------------------------
     // Fields
@@ -659,6 +698,203 @@ public abstract class AbstractBaseJnlpMojo
         return shouldCopy;
     }
 
+    protected void modifyManifestFiles() throws MojoExecutionException {
+        if (!modifyManifest()) {
+            return;
+        }
+
+        if (manifestEntries == null || manifestEntries.isEmpty()) {
+            verboseLog("Manifest modification is enabled but no configuration given. Thus Manifest can not be modified");
+            return;
+        }
+
+        final File directory = getLibDirectory();
+        final File[] jarFiles = directory.listFiles(unprocessedJarFileFilter);
+        if (jarFiles.length == 0) {
+            return;
+        }
+
+        verboseLog("modify Manifest of jars in " + directory + " found " + jarFiles.length + " jar(s) to modify");
+        verboseLog("The following entries will be added to the Manifest");
+        for (Map.Entry<String, String> entry : manifestEntries.entrySet()) {
+            verboseLog(new ManifestEntry(entry.getKey(), entry.getValue()).toString());
+        }
+
+        // process jars
+        try {
+
+            for (int i = 0; i < jarFiles.length; i++) {
+                final File jarFile = jarFiles[i];
+
+                verboseLog("modify " + jarFile);
+
+                // Get existing Manifest from JAR
+                final ManifestFile manifestFile = jarTool.readManifestFromJar(jarFile);
+
+                // Add entries
+                for (Map.Entry<String, String> entry : manifestEntries.entrySet()) {
+                    manifestFile.addEntry(new ManifestEntry(entry.getKey(), entry.getValue()));
+                }
+                generateApplicationNameEntry(jarFile, manifestFile);
+
+                // Write back Manifest to JAR
+                jarTool.writeManifestToJar(manifestFile, jarFile);
+            }
+        } finally {
+            jarTool.finalizeOperations();
+        }
+    }
+
+    protected void includeJnlpToMainJar(AbstractJnlpMojo config, File baseJnlpFile) throws MojoExecutionException {
+        if (!includeJnlpInMainJar){
+            return;
+        }
+
+        final File mainJarFile = findMainJarFile(config, getLibDirectory(), processedJarFileFilter);
+        if (mainJarFile == null) {
+            throw new MojoExecutionException("Failed to find main jar file");
+        }
+
+
+        File formattedJnlpFile = baseJnlpFile;
+        if(includeJnlpType.equals(IncludeJnlpType.APPLICATION_TEMPLATE)){
+            formattedJnlpFile = formatJnlpFile(baseJnlpFile);
+        }
+        try {
+            verboseLog("Adding JNLP file to main jar file");
+            verboseLog("\tMain jar file: " + mainJarFile);
+            verboseLog("\tJNLP file: " + formattedJnlpFile);
+            jarTool.addJnlpToJar(mainJarFile, formattedJnlpFile, includeJnlpType);
+        } finally {
+            if (!baseJnlpFile.equals(formattedJnlpFile)) {
+                formattedJnlpFile.delete();
+            }
+            jarTool.finalizeOperations();
+        }
+        if (getSign() != null) {
+            signTool.unsign(mainJarFile, isVerbose());
+            /*
+             * Since the jarsigner tool provided by JDK/JRE 1.6 is not able to accept the same jar file
+             * as source and target we have to do some nasty stuff.
+             */
+            final File signedJar = new File(mainJarFile.getParent(), mainJarFile.getName() + "-SIGNED");
+            signTool.sign(getSign(), mainJarFile, signedJar);
+            ioUtil.deleteFile(mainJarFile);
+            final boolean renamed = signedJar.renameTo(mainJarFile);
+            if (!renamed) {
+                throw new MojoExecutionException("Failed to renamed signed main jar to final name");
+            }
+        }
+    }
+
+    private File formatJnlpFile(File jnlpFile) throws MojoExecutionException {
+        Reader reader = null;
+        BufferedReader bufferedReader = null;
+        Writer writer = null;
+        BufferedWriter bufferedWriter = null;
+
+        final File formattedJnlpFile = new File(jnlpFile.getAbsolutePath() + ".FORMATTED");
+        verboseLog("Format JNLP file");
+        verboseLog("\tGenerated JNLP file: " + jnlpFile);
+        verboseLog("\tFormatted JNLP file: " + formattedJnlpFile);
+        // Read JNLP file and replace some placeholders
+        try {
+            reader = new FileReader(jnlpFile);
+            bufferedReader = new BufferedReader(reader);
+            writer = new FileWriter(formattedJnlpFile, false);
+            bufferedWriter = new BufferedWriter(writer);
+
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                // Replace $$variables with '*'
+                bufferedWriter.write(line.replaceAll("\\$\\$\\w*", "*"));
+                bufferedWriter.newLine();
+                line = bufferedReader.readLine();
+            }
+            return formattedJnlpFile;
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to format JNLP file: " + e.getMessage(), e);
+        } finally {
+            try {
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+                if (reader != null) {
+                    reader.close();
+                }
+                if (bufferedWriter != null) {
+                    bufferedWriter.close();
+                }
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                // ignore on close
+            }
+        }
+    }
+
+    private File findMainJarFile(AbstractJnlpMojo config, File libDirectory, FileFilter fileFilter) {
+
+        // To some really nasty loops to find the main jar file
+        final List artifacts = config.getPackagedJnlpArtifacts();
+        File mainJarFile = null;
+        String mainJarFileName = null;
+        for (int i = 0; i < artifacts.size(); i++) {
+            Artifact artifact = (Artifact) artifacts.get(i);
+            if (config.isArtifactWithMainClass(artifact)) {
+                mainJarFileName = artifact.getFile().getName();
+                break;
+            }
+        }
+
+        final File[] jarFiles = libDirectory.listFiles(fileFilter);
+        for (int i = 0; i < jarFiles.length; i++) {
+            File file = jarFiles[i];
+            
+            if (StringUtils.endsWithIgnoreCase(mainJarFileName, "SNAPSHOT.jar")) {
+                
+                String prefix = StringUtils.remove(mainJarFileName, "SNAPSHOT.jar");
+                if (StringUtils.startsWithIgnoreCase(file.getName(), prefix)) {
+                    mainJarFile = file;
+                    break;
+                }
+                
+            } else {
+
+                if (file.getName().equals(mainJarFileName)) {
+                    mainJarFile = file;
+                    break;
+                }
+            }
+        }
+
+        if (mainJarFile == null) {
+            getLog().error( "could not find main jar file " + mainJarFileName + " in libPath: " + libPath);
+        } else {
+            getLog().info( "found main jar file " + mainJarFileName + " in libPath: " + libPath);
+        }
+
+        return mainJarFile;
+    }
+
+    private void generateApplicationNameEntry(File jarFile, ManifestFile manifestFile) {
+        if (!generateApplicationNameManifestEntry) {
+            return;
+        }
+
+        // Do not generate entry if it already exists. Existing entry should be better IMHO.
+        if (manifestFile.hasEntry(APPLICATION_NAME_ENTRY_HEADER)) {
+            verboseLog("Skipping generation of Application-Name entry because entry is already present.");
+            return;
+        }
+        // Remove unprocessed prefix
+        final String jarFileName = jarFile.getName();
+        final String jarFileNameWithoutPrefix = jarFileName.substring(UNPROCESSED_PREFIX.length(), jarFileName.length());
+        // Get Application-Name
+        final String applicationName = org.codehaus.mojo.webstart.jarmodification.JarUtil.getApplicationNameFromJar(jarFileNameWithoutPrefix);
+        manifestFile.addEntry(new ManifestEntry(APPLICATION_NAME_ENTRY_HEADER, applicationName));
+    }
 
     /**
      * If sign is enabled, sign the jars, otherwise rename them into final jars
@@ -772,6 +1008,13 @@ public abstract class AbstractBaseJnlpMojo
     protected IOUtil getIoUtil()
     {
         return ioUtil;
+    }
+
+    /**
+     * @return true if Manifest file of jars should be modified.
+     */
+    protected boolean modifyManifest() {
+        return modifyManifest;
     }
 
     protected Pack200Tool getPack200Tool()
