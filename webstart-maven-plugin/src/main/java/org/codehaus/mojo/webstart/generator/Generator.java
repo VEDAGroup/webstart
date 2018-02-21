@@ -19,6 +19,7 @@ package org.codehaus.mojo.webstart.generator;
  * under the License.
  */
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.velocity.VelocityContext;
@@ -111,7 +112,14 @@ public class Generator
 
             for ( Artifact artifact : artifacts )
             {
-                buffer.append( "<jar href=\"" );
+
+                String classifier = artifact.getClassifier();
+                if (StringUtils.startsWithIgnoreCase(classifier,"native")) {
+                    buffer.append("<nativelib href=\"");
+                } else {
+                    buffer.append( "<jar href=\"" );
+                }
+
                 if ( jarLibPath != null )
                 {
                     buffer.append( jarLibPath ).append( "/" );

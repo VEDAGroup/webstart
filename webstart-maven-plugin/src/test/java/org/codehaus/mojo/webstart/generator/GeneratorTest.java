@@ -23,9 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import junit.framework.TestCase;
-
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
@@ -49,6 +47,8 @@ public class GeneratorTest
     protected Artifact artifact3;
     
     protected Artifact artifact4;
+
+    protected Artifact artifact5;
 
     private List<Artifact> artifacts;
 
@@ -82,12 +82,18 @@ public class GeneratorTest
                                      artifactHandler );
         artifact4.setFile( new File( "artifact4-1.5-SNAPSHOT.jar" ) );
 
+        artifact5 =
+                new DefaultArtifact( "groupId", "artifact-native", VersionRange.createFromVersion( "1.0" ), "scope", "jar",
+                        "native", artifactHandler );
+        artifact5.setFile( new File( "artifact-native-1.0.jar" ) );
+
         artifacts = new ArrayList<>();
 
         artifacts.add( artifact1 );
         artifacts.add( artifact2 );
         artifacts.add( artifact3 );
         artifacts.add( artifact4 );
+        artifacts.add( artifact5 );
     }
 
     public void testGetDependenciesText()
@@ -111,9 +117,10 @@ public class GeneratorTest
 
         assertEquals( EOL + "<jar href=\"artifact1-1.0-classifier.jar\" main=\"true\"/>" +
         				EOL + "<jar href=\"artifact2-1.5.jar\"/>" +
-        				EOL +"<jar href=\"artifact3-1.5-15012014.121212-1.jar\"/>" +
-        				EOL +"<jar href=\"artifact4-1.5-SNAPSHOT.jar\"/>" + EOL,
-            Generator.getDependenciesText( generatorConfig ) );
+        				EOL + "<jar href=\"artifact3-1.5-15012014.121212-1.jar\"/>" +
+        				EOL + "<jar href=\"artifact4-1.5-SNAPSHOT.jar\"/>" +
+                        EOL + "<nativelib href=\"artifact-native-1.0-native.jar\"/>" +
+                        EOL, Generator.getDependenciesText( generatorConfig ) );
 
         GeneratorConfig generatorConfig2 =
             new GeneratorConfig( null, false, true, false, artifact1, dependencyFilenameStrategy, artifacts, null, codebase,
@@ -123,8 +130,9 @@ public class GeneratorTest
         				EOL + "<jar href=\"artifact1-classifier.jar\" version=\"1.0\" main=\"true\"/>" +
         				EOL + "<jar href=\"artifact2.jar\" version=\"1.5\"/>" +
         				EOL + "<jar href=\"artifact3.jar\" version=\"1.5-15012014.121212-1\"/>" +
-        				EOL + "<jar href=\"artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" + EOL,
-                      Generator.getDependenciesText( generatorConfig2 ) );
+        				EOL + "<jar href=\"artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" +
+                        EOL + "<nativelib href=\"artifact-native-native.jar\" version=\"1.0\"/>" +
+                        EOL, Generator.getDependenciesText( generatorConfig2 ) );
     }
 
     public void testGetDependenciesTextWithFullNaming()
@@ -149,7 +157,9 @@ public class GeneratorTest
         assertEquals( EOL + "<jar href=\"groupId-artifact1-1.0-classifier.jar\" main=\"true\"/>" +
         				EOL +"<jar href=\"groupId-artifact2-1.5.jar\"/>" +
         				EOL +"<jar href=\"groupId-artifact3-1.5-15012014.121212-1.jar\"/>" +
-        				EOL +"<jar href=\"groupId-artifact4-1.5-SNAPSHOT.jar\"/>" + EOL,
+        				EOL +"<jar href=\"groupId-artifact4-1.5-SNAPSHOT.jar\"/>" +
+                        EOL +"<nativelib href=\"groupId-artifact-native-1.0-native.jar\"/>" +
+                        EOL,
                       Generator.getDependenciesText( generatorConfig ) );
 
         GeneratorConfig generatorConfig2 =
@@ -160,7 +170,9 @@ public class GeneratorTest
         				EOL + "<jar href=\"groupId-artifact1-classifier.jar\" version=\"1.0\" main=\"true\"/>" +
         				EOL + "<jar href=\"groupId-artifact2.jar\" version=\"1.5\"/>" +
         				EOL + "<jar href=\"groupId-artifact3.jar\" version=\"1.5-15012014.121212-1\"/>" +
-        				EOL + "<jar href=\"groupId-artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" + EOL,
+        				EOL + "<jar href=\"groupId-artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" +
+                        EOL +"<nativelib href=\"groupId-artifact-native-native.jar\" version=\"1.0\"/>" +
+                        EOL,
                       Generator.getDependenciesText( generatorConfig2 ) );
     }
 
@@ -187,7 +199,9 @@ public class GeneratorTest
         				EOL + "<jar href=\"artifact1-1.0-classifier.jar\" main=\"true\"/>" +
         				EOL + "<jar href=\"artifact2-1.5.jar\"/>" + 
         				EOL +"<jar href=\"artifact3-1.5-15012014.121212-1.jar\"/>" +
-        				EOL +"<jar href=\"artifact4-1.5-SNAPSHOT.jar\"/>" + EOL, Generator.getDependenciesText( generatorConfig ) );
+        				EOL +"<jar href=\"artifact4-1.5-SNAPSHOT.jar\"/>" +
+                        EOL +"<nativelib href=\"artifact-native-1.0-native.jar\"/>" +
+                        EOL, Generator.getDependenciesText( generatorConfig ) );
 
         GeneratorConfig generatorConfig2 =
             new GeneratorConfig( null, true, true, false, artifact1, dependencyFilenameStrategy, artifacts, null, codebase,
@@ -198,7 +212,9 @@ public class GeneratorTest
         				EOL + "<jar href=\"artifact1-classifier.jar\" version=\"1.0\" main=\"true\"/>" +
         				EOL + "<jar href=\"artifact2.jar\" version=\"1.5\"/>" + 
         				EOL +"<jar href=\"artifact3.jar\" version=\"1.5-15012014.121212-1\"/>" +
-        				EOL +"<jar href=\"artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" + EOL,
+        				EOL +"<jar href=\"artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" +
+                        EOL +"<nativelib href=\"artifact-native-native.jar\" version=\"1.0\"/>" +
+                        EOL,
                       Generator.getDependenciesText( generatorConfig2 ) );
     }
 
@@ -224,7 +240,9 @@ public class GeneratorTest
         assertEquals( EOL + "<jar href=\"lib/artifact1-1.0-classifier.jar\" main=\"true\"/>" +
         				EOL + "<jar href=\"lib/artifact2-1.5.jar\"/>" +
         				EOL +"<jar href=\"lib/artifact3-1.5-15012014.121212-1.jar\"/>" +
-        				EOL +"<jar href=\"lib/artifact4-1.5-SNAPSHOT.jar\"/>" + EOL,
+        				EOL +"<jar href=\"lib/artifact4-1.5-SNAPSHOT.jar\"/>" +
+                        EOL +"<nativelib href=\"lib/artifact-native-1.0-native.jar\"/>" +
+                        EOL,
 
                       Generator.getDependenciesText( generatorConfig ) );
 
@@ -236,7 +254,9 @@ public class GeneratorTest
         				EOL + "<jar href=\"lib/artifact1-classifier.jar\" version=\"1.0\" main=\"true\"/>" +
         				EOL + "<jar href=\"lib/artifact2.jar\" version=\"1.5\"/>" +
         				EOL +"<jar href=\"lib/artifact3.jar\" version=\"1.5-15012014.121212-1\"/>" +
-        				EOL +"<jar href=\"lib/artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" + EOL,
+        				EOL +"<jar href=\"lib/artifact4.jar\" version=\"1.5-SNAPSHOT\"/>" +
+                        EOL +"<nativelib href=\"lib/artifact-native-native.jar\" version=\"1.0\"/>" +
+                        EOL,
                       Generator.getDependenciesText( generatorConfig2 ) );
     }
     
@@ -263,7 +283,9 @@ public class GeneratorTest
         		EOL + "<jar href=\"artifact1-1.0-classifier.jar\" main=\"true\"/>" + 
         				EOL + "<jar href=\"artifact2-1.5.jar\"/>" +
         				EOL + "<jar href=\"artifact3-1.5-15012014.121212-1.jar\"/>" +
-        				EOL + "<jar href=\"artifact4-1.5-19700101.000000-0.jar\"/>" + EOL,
+        				EOL + "<jar href=\"artifact4-1.5-19700101.000000-0.jar\"/>" +
+                        EOL + "<nativelib href=\"artifact-native-1.0-native.jar\"/>" +
+                        EOL,
             Generator.getDependenciesText( generatorConfig ) );
 
         GeneratorConfig generatorConfig2 =
@@ -274,7 +296,9 @@ public class GeneratorTest
         				EOL + "<jar href=\"artifact1-classifier.jar\" version=\"1.0\" main=\"true\"/>" +
         				EOL + "<jar href=\"artifact2.jar\" version=\"1.5\"/>"  +
         				EOL + "<jar href=\"artifact3.jar\" version=\"1.5-15012014.121212-1\"/>" +
-        				EOL + "<jar href=\"artifact4.jar\" version=\"1.5-19700101.000000-0\"/>" + EOL,
+        				EOL + "<jar href=\"artifact4.jar\" version=\"1.5-19700101.000000-0\"/>" +
+                        EOL + "<nativelib href=\"artifact-native-native.jar\" version=\"1.0\"/>"  +
+                        EOL,
                       Generator.getDependenciesText( generatorConfig2 ) );
         
         GeneratorConfig generatorConfig3 =
@@ -284,7 +308,9 @@ public class GeneratorTest
             assertEquals( EOL + "<jar href=\"artifact1-1.0-classifier.jar\" main=\"true\"/>" +
             				EOL + "<jar href=\"artifact2-1.5.jar\"/>"  +
             				EOL + "<jar href=\"artifact3-1.5-15012014.121212-1.jar\"/>" +
-            				EOL + "<jar href=\"artifact4-1.5-19700101.000000-0.jar\"/>" + EOL,
+            				EOL + "<jar href=\"artifact4-1.5-19700101.000000-0.jar\"/>" +
+                            EOL + "<nativelib href=\"artifact-native-1.0-native.jar\"/>" +
+                            EOL,
                           Generator.getDependenciesText( generatorConfig3 ) );
     }
 }

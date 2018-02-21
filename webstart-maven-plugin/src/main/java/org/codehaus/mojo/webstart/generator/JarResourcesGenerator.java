@@ -82,7 +82,13 @@ public class JarResourcesGenerator
                     continue;
                 }
 
-                buffer.append( "<jar href=\"" );
+                String classifier = jarResource.getClassifier();
+                if (org.apache.commons.lang.StringUtils.startsWithIgnoreCase(classifier,"native")) {
+                    buffer.append("<nativelib href=\"");
+                } else {
+                    buffer.append("<jar href=\"");
+                }
+
                 if ( StringUtils.isNotEmpty( libPath ) )
                 {
                     buffer.append( libPath );
