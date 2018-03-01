@@ -27,7 +27,7 @@
     <dependency>
       <groupId>net.veda</groupId>
       <artifactId>webstart-jnlp-servlet</artifactId>
-      <version>1.8.0-SNAPSHOT</version>   <!-- UGA Anpassen -->
+      <version>@project.version@</version>
     </dependency>
 
     <dependency>
@@ -99,7 +99,7 @@
           <unsign>true</unsign>
           <!-- unsign already signed packages and sign them with own key -->
 
-          <verifyjar>false</verifyjar>
+          <!-- <verifyjar>false</verifyjar> -->
         </configuration>
       </plugin>
     </plugins>

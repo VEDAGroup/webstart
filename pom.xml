@@ -8,10 +8,9 @@
     <version>39</version>
   </parent>
 
-  <!-- HIER: VEDA -->
   <groupId>net.veda</groupId>
   <artifactId>webstart-mojo</artifactId>
-  <version>1.8.0-SNAPSHOT</version>   <!-- Version für java 8 (JDK 1.8) :-) -->
+  <version>1.8.0</version>   <!-- Version for java 8 (JDK 1.8) :-) -->
   <packaging>pom</packaging>
 
   <name>MWEBSTART :: Project</name>

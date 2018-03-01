@@ -35,7 +35,7 @@
 			<plugin>
 				<groupId>net.veda</groupId>
 				<artifactId>webstart-maven-plugin</artifactId>
-				<version>1.8.0-SNAPSHOT</version>   <!-- UGA Anpassen -->
+				<version>@project.version@</version>
 				<executions>
 					<execution>
 						<phase>process-resources</phase>
