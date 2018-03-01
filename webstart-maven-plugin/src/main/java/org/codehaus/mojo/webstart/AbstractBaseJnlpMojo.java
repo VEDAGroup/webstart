@@ -854,7 +854,7 @@ public abstract class AbstractBaseJnlpMojo
             
             if (StringUtils.endsWithIgnoreCase(mainJarFileName, "SNAPSHOT.jar")) {
                 
-                String prefix = StringUtils.remove(mainJarFileName, "SNAPSHOT.jar");
+                String prefix = StringUtils.removeEndIgnoreCase(mainJarFileName, "SNAPSHOT.jar");
                 if (StringUtils.startsWithIgnoreCase(file.getName(), prefix)) {
                     mainJarFile = file;
                     break;
